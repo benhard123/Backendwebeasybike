@@ -1,0 +1,13 @@
+Informasi penggunaan API
+
+Tautan API: api.easybike.web.id
+contoh penggunaan: api.easybike.web.id/{fungsi_API}
+Fungsi-fungsi api:
+1.   / (kosong)   :  tidak ada
+2.   /test        :  menguji coba api
+     respon API: JSON {"test": "Jalan Bos"}
+3.   /gpsaccept   :  mengirim data lokasi sepeda ke server
+     kirim data dengan format json dengan variabel id, latitude, dan longitude
+     mendapatkan data berupa  
+4.   /gpsdata     :  menerima data lokasi sepeda dari server
+      mendapatkan data lokasi sepeda dari server berupa json
