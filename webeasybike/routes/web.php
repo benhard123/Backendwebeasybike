@@ -23,23 +23,46 @@ $router->get('/test', function () {
     return response()->json(['Test' => 'Jalan Boss']);
 });
 
+// $router->post('/rfiddaftar', function (Request $request) {
+//     $query = app('db')->insert("INSERT INTO Data_User (rfid, nama) values (:rfid, :nama)", $request->json()->all());
+//     return response()->json(["message" => "berhasil didaftarkan"]);
+// });
+
+$router->post('/rfidcheck', function (Request $request) {
+    $query = app('db')->select("SELECT COUNT(data_user_id) AS jumlah FROM Data_RFID WHERE rfid = :rfid",['rfid' => $request->rfid]);
+    return response()->json($query);
+});
+
+$router->post('/pinjamsepeda', function (Request $request) {
+    $query = app('db')->select("SELECT COUNT(data_user_id) AS jumlah FROM Data_RFID WHERE rfid = :rfid",['rfid' => $request->rfid]);
+    if($query[0]->jumlah = 1){
+        $query = app('db')->select("SELECT in_use, battery_percentage FROM Bike WHERE bike_id = :bike_id",['bike_id' => $request->bike_id]);
+        if(count($query)>0){
+            if($query->in_use == 1){
+                return response()->json(["message"=>"Sepeda Sedang dipakai"]);
+            }
+            else{
+                $query = app('db')->update("UPDATE Bike set in_use=1 WHERE bike_id = :bike_id", ['bike_id' => $request->bike_id]);
+                return response()->json(["message"=>"Sepeda siap digunakan"]);
+            }
+        }
+        else{
+            return response()->json(["message"=>"Sepeda Tidak Terdaftar"]);
+        }
+    }
+    else{
+        return response()->json(["message"=>"Pengguna Tidak Terdaftar"]);
+    }
+});
+
+
 $router->post('/gpsaccept',function(Request $request) {
     $test=app('db')->select("SELECT COUNT(bike_id) AS jumlah FROM Bike WHERE bike_id = :id",['id' => $request->id]);
     if ($test[0]->jumlah >0){
-        try{
-            $query = app('db')->update("UPDATE Bike set latitude= :latitude , longitude= :longitude WHERE bike_id = :id", $request->json()->all());
-        }
-        catch (Exception $e){
-            return response()->json(["error_code"=> 500, "message"=> $e]);
-        }
+        $query = app('db')->update("UPDATE Bike set latitude= :latitude , longitude= :longitude WHERE bike_id = :id", $request->json()->all());
     }
     else if($test[0]->jumlah ==0){
-        try{
-            $query = app('db')->insert("INSERT INTO Bike values( :id , :latitude , :longitude)", $request->json()->all());
-        }
-        catch (Exception $e){
-            return response()->json(["error_code"=> 500, "message"=> $e]);
-        }
+        $query = app('db')->insert("INSERT INTO Bike values( :id , :latitude , :longitude)", $request->json()->all());
     }
     $poligon = array("-6.930246 107.774365","-6.928944 107.777785","-6.919930 107.774055","-6.921711 107.769723","-6.930246 107.774365");
     foreach($poligon as $vertex){
@@ -93,7 +116,7 @@ $router->post('/login',['middleware' => 'cors', function(Request $request) {
     return response()->json($hasil);
 }]);
 
-$router->get('/gpsdata', function(){
+$router->get('/gpsdata',['middleware' => 'cors', function(){
     $test=app('db')->select("SELECT * FROM Bike");
     return response()->json($test);
-});
+}]);
