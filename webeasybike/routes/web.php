@@ -29,17 +29,19 @@ $router->get('/test', function () {
 // });
 
 $router->post('/rfidcheck', function (Request $request) {
-    $query = app('db')->select("SELECT COUNT(data_user_id) AS jumlah FROM Data_RFID WHERE rfid = :rfid",['rfid' => $request->rfid]);
-    return response()->json($query);
+    $query = app('db')->select("SELECT data_user_id FROM Data_RFID WHERE rfid = :rfid",['rfid' => $request->rfid]);
+    $query = app('db')->select("SELECT * FROM Data_User WHERE data_user_id = :id",['id' => $query[0]->data_user_id]);
+    $hasil = array_merge($request->json()->all(),["HASIL"=>$query[0]]);
+    return response()->json($hasil);
 });
 
 $router->post('/pinjamsepeda', function (Request $request) {
     $query = app('db')->select("SELECT COUNT(data_user_id) AS jumlah FROM Data_RFID WHERE rfid = :rfid",['rfid' => $request->rfid]);
-    if($query[0]->jumlah = 1){
+    if($query[0]->jumlah == 1){
         $query = app('db')->select("SELECT in_use, battery_percentage FROM Bike WHERE bike_id = :bike_id",['bike_id' => $request->bike_id]);
         if(count($query)>0){
             if($query->in_use == 1){
-                return response()->json(["message"=>"Sepeda Sedang dipakai"]);
+                return response()->json(["message"=>"Sepeda Sedang dipakai"],406);
             }
             else{
                 $query = app('db')->update("UPDATE Bike set in_use=1 WHERE bike_id = :bike_id", ['bike_id' => $request->bike_id]);
@@ -47,11 +49,11 @@ $router->post('/pinjamsepeda', function (Request $request) {
             }
         }
         else{
-            return response()->json(["message"=>"Sepeda Tidak Terdaftar"]);
+            return response()->json(["message"=>"Sepeda Tidak Terdaftar"],404);
         }
     }
     else{
-        return response()->json(["message"=>"Pengguna Tidak Terdaftar"]);
+        return response()->json(["message"=>"Pengguna Tidak Terdaftar"],404);
     }
 });
 
@@ -112,8 +114,9 @@ $router->post('/gpsaccept',function(Request $request) {
 
 $router->post('/login',['middleware' => 'cors', function(Request $request) {
     $test=app('db')->select("SELECT * FROM User");
-    $hasil = array_merge(['Didalam zona' => 'Ya'],$request->json()->all());
-    return response()->json($hasil);
+    // $hasil = array_merge(['Didalam zona' => 'Ya'],$request->json()->all());
+    // return response()->json($hasil);
+    return response()->json($request->json()->all());
 }]);
 
 $router->get('/gpsdata',['middleware' => 'cors', function(){
