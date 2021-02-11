@@ -5,9 +5,26 @@ contoh penggunaan: api.easybike.web.id/{fungsi_API}
 Fungsi-fungsi api:
 1.   / (kosong)   :  tidak ada
 2.   /test        :  menguji coba api
-     respon API: JSON {"test": "Jalan Bos"}
+     respon API: JSON {"test": "Jalan Bos"} (selain ini berarti error)
 3.   /gpsaccept   :  mengirim data lokasi sepeda ke server
      kirim data dengan format json dengan variabel id, latitude, dan longitude
+     contoh : {"id": 2, "latitude": -6.2313, "longitude": "102.3242"}
      mendapatkan data berupa  
 4.   /gpsdata     :  menerima data lokasi sepeda dari server
-      mendapatkan data lokasi sepeda dari server berupa json
+     mendapatkan data lokasi sepeda dari server berupa json dengan isi variabel bike_id, lalitude, dan longitude
+     contoh data yang didapat :  {{"bike_id": 2, "latitude": -6.2313, "longitude": "102.3242"}}
+5.   /rfidcheck   :  memeriksa data rfid, jika ada data pengguna dengan rfid tersebut, maka data user akan keluar
+     contoh data yang dikirm : { "rfid":"124aefd34253eda" }
+     contoh data yang diterima : 
+     {
+          "rfid": "124aefd34253eda",
+          "HASIL": [
+               {
+                      "data_user_id": 1,
+                      "nama": "Nama Test",
+                      "NPM": null,
+                      "jurusan": null,
+                      "fakultas": null
+               }
+          ]
+     }
