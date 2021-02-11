@@ -30,8 +30,13 @@ $router->get('/test', function () {
 
 $router->post('/rfidcheck', function (Request $request) {
     $query = app('db')->select("SELECT data_user_id FROM Data_RFID WHERE rfid = :rfid",['rfid' => $request->rfid]);
-    $query = app('db')->select("SELECT * FROM Data_User WHERE data_user_id = :id",['id' => $query[0]->data_user_id]);
-    $hasil = array_merge($request->json()->all(),["HASIL"=>$query[0]]);
+    if (count($query)>0){
+        $query = app('db')->select("SELECT * FROM Data_User WHERE data_user_id = :id",['id' => $query[0]->data_user_id]);
+        $hasil = array_merge($request->json()->all(),["HASIL"=>$query]);
+    }
+    else{
+        $hasil = array_merge($request->json()->all(),["HASIL"=>[]]);
+    }
     return response()->json($hasil);
 });
 
