@@ -33,11 +33,12 @@ $router->post('/rfidcheck', function (Request $request) {
     if (count($query)>0){
         $query = app('db')->select("SELECT * FROM Data_User WHERE data_user_id = :id",['id' => $query[0]->data_user_id]);
         $hasil = array_merge($request->json()->all(),["HASIL"=>$query]);
+        return response()->json($hasil);
     }
     else{
         $hasil = array_merge($request->json()->all(),["HASIL"=>[]]);
+        return response()->json($hasil,404);
     }
-    return response()->json($hasil);
 });
 
 $router->post('/pinjamsepeda', function (Request $request) {
@@ -71,7 +72,29 @@ $router->post('/gpsaccept',function(Request $request) {
     else if($test[0]->jumlah ==0){
         $query = app('db')->insert("INSERT INTO Bike values( :id , :latitude , :longitude)", $request->json()->all());
     }
-    $poligon = array("-6.930246 107.774365","-6.928944 107.777785","-6.919930 107.774055","-6.921711 107.769723","-6.930246 107.774365");
+    // const koordinatgeofence = [
+    //     { lat: -6.932651, lng: 107.772106 },
+    //     { lat: -6.932191, lng: 107.773204 },
+    //     { lat: -6.932079, lng: 107.773937 },
+    //     { lat: -6.931424, lng: 107.776048 },
+    //     { lat: -6.931418, lng: 107.776363 },
+    //     { lat: -6.931891, lng: 107.776472 },
+    //     { lat: -6.919930, lng: 107.774055 },
+    //     { lat: -6.921711, lng: 107.769723 },
+    //     { lat: -6.930406, lng: 107.773581 },
+    //     { lat: -6.930960, lng: 107.771675 },
+    //     { lat: -6.932651, lng: 107.772106 },
+    //   ];
+    $poligon = array("-6.932651 107.772106",
+                    "-6.932191 107.773204",
+                    "-6.932079 107.773937",
+                    "-6.931424 107.776048",
+                    "-6.931418 107.776363",
+                    "-6.919930 107.774055",
+                    "-6.921711 107.769723",
+                    "-6.930406 107.773581",
+                    "-6.930960 107.771675",
+                    "-6.932651 107.772106");
     foreach($poligon as $vertex){
         $coordinates = explode(" ", $vertex);
         $vertices[] = array("x" => $coordinates[0], "y" => $coordinates[1]);
