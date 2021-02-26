@@ -14,6 +14,7 @@
 */
 
 use Illuminate\Http\Request;
+use \Firebase\JWT\JWT;
 
 $router->get('/', function () use ($router) {
     return $router->app->version();
@@ -49,6 +50,9 @@ $router->post('/pinjamsepeda', function (Request $request) {
             if($query->in_use == 1){
                 return response()->json(["message"=>"Sepeda Sedang dipakai"],406);
             }
+            // else if($query->battery_percentage == 0){
+            //     return response()->json(["message"=>"Sepeda Habis baterai"],406);
+            // }
             else{
                 $query = app('db')->update("UPDATE Bike set in_use=1 WHERE bike_id = :bike_id", ['bike_id' => $request->bike_id]);
                 return response()->json(["message"=>"Sepeda siap digunakan"]);
@@ -141,10 +145,30 @@ $router->post('/gpsaccept',function(Request $request) {
 });
 
 $router->post('/login',['middleware' => 'cors', function(Request $request) {
-    $test=app('db')->select("SELECT * FROM User");
-    // $hasil = array_merge(['Didalam zona' => 'Ya'],$request->json()->all());
-    // return response()->json($hasil);
-    return response()->json($request->json()->all());
+    $test=app('db')->select("SELECT `data_user_id` FROM `Username` WHERE `username`= :username AND `password` = :password",['username' => $request->username, 'password' => $request->password]);
+    if(count($test)<=0){
+        // $hasil = array_merge(["message"=>"user tidak ditemukan"],$request->json()->all());
+        // return response()->json($hasil,404);
+        return response()->json(["message"=>"user tidak ditemukan"],404);
+    }
+    $secret_key = "OH_NOOO";
+    $issuer_claim = "THE_ISSUER";
+    $audience_claim = "THE_AUDIENCE";
+    $issuedat_claim = time(); // issued at
+    $notbefore_claim = $issuedat_claim + 10; //not before in seconds
+    $expire_claim = $issuedat_claim + 60; // expire time in seconds
+    $token = array(
+        "iss" => $issuer_claim,
+        "aud" => $audience_claim,
+        "iat" => $issuedat_claim,
+        "nbf" => $notbefore_claim,
+        "exp" => $expire_claim,
+        "data" => array(
+            "data_user_id" => $test[0]->data_user_id,
+    ));
+    $jwt = JWT::encode($token, $secret_key);
+
+    return response()->json(["message" => "berhasil masuk", "jwt" => $jwt]);
 }]);
 
 $router->get('/gpsdata',['middleware' => 'cors', function(){
