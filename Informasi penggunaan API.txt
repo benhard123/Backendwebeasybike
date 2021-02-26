@@ -28,3 +28,7 @@ Fungsi-fungsi api:
                }
           ]
      }
+6.   /pinjamsepeda : memeriksa data rfid dan sepeda, dan mengirimkan respon ketersediaan sepeda
+     contoh pesan yang dikirm { "rfid":"124aefd34253eda" , bike_id=1}
+     contoh data yang diterima : {"message":"sepeda siap digunakan"} (jika mendapat respon selain ini/ status code != 200, error)
+     
