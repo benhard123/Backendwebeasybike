@@ -37,7 +37,7 @@ $router->post('/rfidcheck', function (Request $request) {
         return response()->json($hasil);
     }
     else{
-        $hasil = array_merge($request->json()->all(),["HASIL"=>[]]);
+        $hasil = array_merge($request->json()->all(),["message"=>"pengguna tidak ditemukan"]);
         return response()->json($hasil,404);
     }
 });
@@ -73,8 +73,8 @@ $router->post('/gpsaccept',function(Request $request) {
     if ($test[0]->jumlah >0){
         $query = app('db')->update("UPDATE Bike set latitude= :latitude , longitude= :longitude WHERE bike_id = :id", $request->json()->all());
     }
-    else if($test[0]->jumlah ==0){
-        $query = app('db')->insert("INSERT INTO Bike values( :id , :latitude , :longitude)", $request->json()->all());
+    else if($test[0]->jumlah == 0){
+        $query = app('db')->insert("INSERT INTO Bike(bike_id,latitude,longitude) values( :id , :latitude , :longitude)", $request->json()->all());
     }
     // const koordinatgeofence = [
     //     { lat: -6.932651, lng: 107.772106 },
@@ -175,3 +175,15 @@ $router->get('/gpsdata',['middleware' => 'cors', function(){
     $test=app('db')->select("SELECT * FROM Bike");
     return response()->json($test);
 }]);
+
+$router->post('/baterryaccept',function(Request $request) {
+    $test=app('db')->select("SELECT COUNT(bike_id) AS jumlah FROM Bike WHERE bike_id = :id",['id' => $request->id]);
+    if ($test[0]->jumlah >0){
+        $query = app('db')->update("UPDATE Bike set charging= :charging , battery_percentage= :battery_percentage WHERE bike_id = :id", $request->json()->all());
+    }
+    else if($test[0]->jumlah == 0){
+        $query = app('db')->insert("INSERT INTO Bike(bike_id,battery_percentage,charging) values( :id , :battery_percentage , :charging)", $request->json()->all());
+    }
+    $hasil = array_merge(['message' => 'Data baterai sudah disimpan'],$request->json()->all());
+    return response()->json($hasil);
+});
