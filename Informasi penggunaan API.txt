@@ -9,7 +9,13 @@ Fungsi-fungsi api:
 3.   /gpsaccept   :  mengirim data lokasi sepeda ke server
      kirim data dengan format json dengan variabel id, latitude, dan longitude
      contoh : {"id": 2, "latitude": -6.2313, "longitude": "102.3242"}
-     mendapatkan data berupa  
+     mendapatkan data: 
+     {
+          "Didalam zona": "Ya",
+          "id": 2,
+          "latitude": -6.924318,
+          "longitude": 107.773999
+     }
 4.   /gpsdata     :  menerima data lokasi sepeda dari server
      mendapatkan data lokasi sepeda dari server berupa json dengan isi variabel bike_id, lalitude, dan longitude
      contoh data yang didapat :  {{"bike_id": 2, "latitude": -6.2313, "longitude": "102.3242"}}
@@ -31,4 +37,7 @@ Fungsi-fungsi api:
 6.   /pinjamsepeda : memeriksa data rfid dan sepeda, dan mengirimkan respon ketersediaan sepeda
      contoh pesan yang dikirm { "rfid":"124aefd34253eda" , bike_id=1}
      contoh data yang diterima : {"message":"sepeda siap digunakan"} (jika mendapat respon selain ini/ status code != 200, error)
+7.   /baterryaccept : mengirim data batterai sepeda
+     contoh pesan yang dikirm { "id" : 4, "battery_percentage": 30, "charging": true }
+     contoh data yang diterima : {"message":"Data baterai sudah disimpan","id":2,"battery_percentage":30,"charging":true} (jika mendapat respon selain ini/ status code != 200, error)
      

@@ -43,18 +43,19 @@ $router->post('/rfidcheck', function (Request $request) {
 });
 
 $router->post('/pinjamsepeda', function (Request $request) {
-    $query = app('db')->select("SELECT COUNT(data_user_id) AS jumlah FROM Data_RFID WHERE rfid = :rfid",['rfid' => $request->rfid]);
-    if($query[0]->jumlah == 1){
+    $query = app('db')->select("SELECT data_user_id AS jumlah FROM Data_RFID WHERE rfid = :rfid",['rfid' => $request->rfid]);
+    if(count($query)>0){
+        $id_user = $query[0]->data_user_id;
         $query = app('db')->select("SELECT in_use, battery_percentage FROM Bike WHERE bike_id = :bike_id",['bike_id' => $request->bike_id]);
         if(count($query)>0){
-            if($query->in_use == 1){
+            if($query[0]->in_use == 1){
                 return response()->json(["message"=>"Sepeda Sedang dipakai"],406);
             }
             // else if($query->battery_percentage == 0){
             //     return response()->json(["message"=>"Sepeda Habis baterai"],406);
             // }
             else{
-                $query = app('db')->update("UPDATE Bike set in_use=1 WHERE bike_id = :bike_id", ['bike_id' => $request->bike_id]);
+                $query = app('db')->update("UPDATE Bike set in_use=1, charging=0 WHERE bike_id = :bike_id", ['bike_id' => $request->bike_id]);
                 return response()->json(["message"=>"Sepeda siap digunakan"]);
             }
         }
@@ -167,12 +168,14 @@ $router->post('/gpsaccept',function(Request $request) {
         $vertex1 = $vertices[$i-1];
         $vertex2 = $vertices[$i];
         if ($vertex1['y'] == $vertex2['y'] and $vertex1['y'] == $request->longitude and $request->latitude > min($vertex1['x'], $vertex2['x'])){ // Check if point is on an horizontal polygon boundary
+            $query = app('db')->update("UPDATE Bike set in_location= 1");
             $hasil = array_merge(['Didalam zona' => 'Ya'],$request->json()->all());
             return response()->json($hasil);
         }
         if ($request->longitude > min($vertex1['y'], $vertex2['y']) and $request->longitude <= max($vertex1['y'], $vertex2['y']) and $request->latitude <= max($vertex1['x'], $vertex2['x']) and $vertex1['y'] != $vertex2['y']) { 
             $xinters = ($request->longitude - $vertex1['y']) * ($vertex2['x'] - $vertex1['x']) / ($vertex2['y'] - $vertex1['y']) + $vertex1['x']; 
             if ($xinters == $request->latitude) { // Check if point is on the polygon boundary (other than horizontal)
+                $query = app('db')->update("UPDATE Bike set in_location= 1");
                 $hasil = array_merge(['Didalam zona' => 'Ya'],$request->json()->all());
                 return response()->json($hasil);
             }
@@ -182,12 +185,15 @@ $router->post('/gpsaccept',function(Request $request) {
         }
     }
     if ($intersections % 2 != 0) {
+        $query = app('db')->update("UPDATE Bike set in_location= 1");
         $hasil = array_merge(['Didalam zona' => 'Ya'],$request->json()->all());
         return response()->json($hasil);
     } else {
+        $query = app('db')->update("UPDATE Bike set in_location= 0");
         $hasil = array_merge(['Didalam zona' => 'Tidak'],$request->json()->all());
         return response()->json($hasil);
     }
+    $query = app('db')->update("UPDATE Bike set in_location= 0");
     $hasil = array_merge(['Didalam zona' => 'Entahlah'],$request->json()->all());
     return response()->json($hasil);
 });
@@ -219,6 +225,11 @@ $router->post('/login',['middleware' => 'cors', function(Request $request) {
     return response()->json(["message" => "berhasil masuk", "jwt" => $jwt]);
 }]);
 
+$router->post('/createaccount', ['middleware' => 'cors', function(Request $request){
+    $test=app('db')->select("SELECT `data_user_id` FROM `Username` WHERE `username`= :username AND `password` = :password",['username' => $request->username, 'password' => $request->password]);
+    return response()->json(["message" => "berhasil masuk", "jwt" => $jwt]);
+}]);
+
 $router->get('/gpsdata',['middleware' => 'cors', function(){
     $test=app('db')->select("SELECT * FROM Bike");
     return response()->json($test);
@@ -227,10 +238,10 @@ $router->get('/gpsdata',['middleware' => 'cors', function(){
 $router->post('/baterryaccept',function(Request $request) {
     $test=app('db')->select("SELECT COUNT(bike_id) AS jumlah FROM Bike WHERE bike_id = :id",['id' => $request->id]);
     if ($test[0]->jumlah >0){
-        $query = app('db')->update("UPDATE Bike set charging= :charging , battery_percentage= :battery_percentage WHERE bike_id = :id", $request->json()->all());
+        $query = app('db')->update("UPDATE Bike set in_use = 0 ,charging= :charging , battery_percentage= :battery_percentage WHERE bike_id = :id", $request->json()->all());
     }
     else if($test[0]->jumlah == 0){
-        $query = app('db')->insert("INSERT INTO Bike(bike_id,battery_percentage,charging) values( :id , :battery_percentage , :charging)", $request->json()->all());
+        $query = app('db')->insert("INSERT INTO Bike(bike_id,in_use,battery_percentage,charging) values( :id , 0 , :battery_percentage , :charging)", $request->json()->all());
     }
     $hasil = array_merge(['message' => 'Data baterai sudah disimpan'],$request->json()->all());
     return response()->json($hasil);
